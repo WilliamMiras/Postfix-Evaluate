@@ -86,9 +86,6 @@ class Queue {
         System.out.println();
     }
 
-    boolean isEmpty() {
-        return head == null;
-    }
 }
 
 class Postfix {
