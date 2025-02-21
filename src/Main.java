@@ -1,12 +1,12 @@
 import java.util.Scanner;
 
-class Node {
+class Node{
 
-    int value;
+    char value;
     Node next;
     Node prev;
 
-    public Node(int value) {
+    public Node(char value) {
         this.value = value;
     }
 }
@@ -15,36 +15,39 @@ class Stack {
 
     Node top;
 
-    void push(int value) {
+    void push(char value) {
+        Node newNode = new Node(value);
         if(top == null) {
-            top = new Node(value);
-            top.prev = null;
-            top.next = null;
+            top = newNode;
         }
         else {
-            Node newNode = new Node(value);
             newNode.next = top;
-            newNode.prev = null;
             top.prev = newNode;
             top = newNode;
         }
     }
 
-    int pop() {
+    char pop() {
         if(top != null) {
-            int value = top.value;
+            char value = top.value;
             top = top.next;
-            top.prev = null;
+            if(top != null) {
+                top.prev = null;
+            }
             return value;
         }
-        return -1;
+        return 'E';
     }
 
-    int peek() {
+    char peek() {
         if(top != null) {
             return top.value;
         }
-        return -1;
+        return 'E';
+    }
+
+    boolean isEmpty() {
+        return top == null;
     }
 }
 
@@ -52,21 +55,24 @@ class Queue {
     Node head;
     Node tail;
 
-    void enqueue(int value) {
+    void enqueue(char value) {
         Node newNode = new Node(value);
 
         if(head == null) {
             head = newNode;
+            tail = newNode;
         }
         else {
             tail.next = newNode;
+            tail = newNode;
         }
-
-        tail = newNode;
     }
 
-    int dequeue() {
-        int value = head.value;
+    char dequeue() {
+        if(head == null) {
+            return 'E';
+        }
+        char value = head.value;
         head = head.next;
         return value;
     }
@@ -79,6 +85,10 @@ class Queue {
         }
         System.out.println();
     }
+
+    boolean isEmpty() {
+        return head == null;
+    }
 }
 
 class Postfix {
@@ -87,86 +97,78 @@ class Postfix {
 
     int getPrecedence(char operator) {
         switch (operator) {
-            case '=':
-                return 1;
-            case '(':
-                return 2;
             case '+':
             case '-':
-                return 3;
+                return 1;
+            case '*':
+            case '/':
+                return 2;
+            case '(':
+                return 0;
             default:
-                return 4;
+                return -1;
         }
     }
 
     Queue infToPre(String expression) {
         Stack stack = new Stack();
 
-        for(int i = 0; i < expression.length(); i++){
+        for (int i = 0; i < expression.length(); i++) {
             char c = expression.charAt(i);
-            if(Character.isDigit(c)) {
+
+            if (Character.isDigit(c)) {
                 queue.enqueue(c);
-            }
-            else if(c == '(') {
+            } else if (c == '(') {
                 stack.push(c);
-            }
-            else if(c == ')') {
-                char expr = (char)stack.pop();
-                while(stack.pop() != '(') {
+            } else if (c == ')') {
+                while (!stack.isEmpty() && stack.peek() != '(') {
                     queue.enqueue(stack.pop());
                 }
                 stack.pop();
-            }
-            else {
-                char operator = (char)stack.peek();
-                if(operator == -1) {
-                    stack.push(c);
+            } else {
+                while(!stack.isEmpty() && getPrecedence(c) <= getPrecedence(stack.peek())) {
+                    queue.enqueue(stack.pop());
                 }
-                else {
-                    if(getPrecedence(c) > getPrecedence(operator)) {
-                        stack.push(c);
-                    }
-                    else {
-                        while(getPrecedence(c) <= getPrecedence(operator) && operator != -1) {
-                            queue.enqueue(stack.pop());
-                            operator = stack.peek();
-                        }
-                    }
-                }
+                stack.push(c);
             }
         }
+
+        while(!stack.isEmpty()) {
+            queue.enqueue(stack.pop());
+        }
+
         return queue;
     }
 
 
-
     int evaluatePostfix() {
         Stack stack = new Stack();
-        int expr = queue.dequeue();
+        char expr = queue.dequeue();
 
-        while(expr == '=') {
-            if(Character.isDigit(expr)) {
+        while (expr != 'E') {
+            if (Character.isDigit(expr)) {
                 stack.push(expr);
-            }
-            else {
-                int num1 = stack.pop();
-                int num2 = stack.pop();
-                if(expr == '*'){
-                    stack.push(num1*num2);
+            } else {
+                int num2 = stack.pop() - '0';
+                int num1 = stack.pop() - '0';
+                int result = 0;
+
+                if (expr == '*') {
+                    result = num1 * num2;
+                } else if (expr == '/') {
+                    result = num1 / num2;
+                } else if (expr == '+') {
+                    result = num1 + num2;
+                } else if (expr == '-') {
+                    result = num1 - num2;
                 }
-                else if(expr == '/'){
-                    stack.push(num1/num2);
-                }
-                else if (expr == '+'){
-                    stack.push(num1+num2);
-                }
-                else if (expr == '-'){
-                    stack.push(num1-num2);
-                }
+
+                stack.push((char) (result + '0'));
             }
             expr = queue.dequeue();
+        }
+        return stack.pop() - '0';
     }
-        return expr;
 }
 
 class Driver {
@@ -174,13 +176,13 @@ class Driver {
         Postfix postfix = new Postfix();
         Scanner sc = new Scanner(System.in);
 
-        System.out.println("Give me an expression: ");
+        System.out.print("Give me an expression: ");
         String expression = sc.nextLine();
         Queue queue = postfix.infToPre(expression);
 
-        System.out.print("Postfix expression: ");
+        System.out.print("\nPostfix expression: ");
         queue.display();
 
-        System.out.print("Answer: " + postfix.evaluatePostfix());
+        System.out.print("\nAnswer: " + postfix.evaluatePostfix());
     }
 }
