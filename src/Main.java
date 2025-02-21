@@ -70,6 +70,40 @@ class Queue {
 
 class Postfix {
 
+    int getPrecedence(char operator) {
+        switch (operator) {
+            case '=':
+                return 1;
+            case '(':
+                return 2;
+            case '+':
+            case '-':
+                return 3;
+            default:
+                return 4;
+        }
+    }
+
+    void evaluate(String expression) {
+        Stack stack = new Stack();
+        Queue queue = new Queue();
+
+        for(int i = 0; i < expression.length(); i++){
+            char c = expression.charAt(i);
+            if(Character.isDigit(c)) {
+                queue.enqueue(c);
+            }
+            else if(c == '(') {
+                stack.push(c);
+            }
+            else if(c == ')') {
+                char 
+                while(stack.pop() != '(') {
+                    queue.enqueue(stack.pop());
+                }
+            }
+        }
+    }
 }
 
 class Driver {
