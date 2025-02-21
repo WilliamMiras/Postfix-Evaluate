@@ -1,3 +1,5 @@
+import java.util.Scanner;
+
 class Node {
 
     int value;
@@ -35,7 +37,14 @@ class Stack {
             top.prev = null;
             return value;
         }
-        return 0;
+        return -1;
+    }
+
+    int peek() {
+        if(top != null) {
+            return top.value;
+        }
+        return -1;
     }
 }
 
@@ -57,18 +66,24 @@ class Queue {
     }
 
     int dequeue() {
-        if(head == null) {
-            return 0;
+        int value = head.value;
+        head = head.next;
+        return value;
+    }
+
+    void display() {
+        Node temp = head;
+        while(temp != null) {
+            System.out.print(temp.value);
+            temp = temp.next;
         }
-        else {
-            int value = head.value;
-            head = head.next;
-            return value;
-        }
+        System.out.println();
     }
 }
 
 class Postfix {
+
+    Queue queue = new Queue();
 
     int getPrecedence(char operator) {
         switch (operator) {
@@ -84,9 +99,8 @@ class Postfix {
         }
     }
 
-    void evaluate(String expression) {
+    Queue infToPre(String expression) {
         Stack stack = new Stack();
-        Queue queue = new Queue();
 
         for(int i = 0; i < expression.length(); i++){
             char c = expression.charAt(i);
@@ -97,17 +111,76 @@ class Postfix {
                 stack.push(c);
             }
             else if(c == ')') {
-                char 
+                char expr = (char)stack.pop();
                 while(stack.pop() != '(') {
                     queue.enqueue(stack.pop());
                 }
+                stack.pop();
+            }
+            else {
+                char operator = (char)stack.peek();
+                if(operator == -1) {
+                    stack.push(c);
+                }
+                else {
+                    if(getPrecedence(c) > getPrecedence(operator)) {
+                        stack.push(c);
+                    }
+                    else {
+                        while(getPrecedence(c) <= getPrecedence(operator) && operator != -1) {
+                            queue.enqueue(stack.pop());
+                            operator = stack.peek();
+                        }
+                    }
+                }
             }
         }
+        return queue;
     }
+
+
+
+    int evaluatePostfix() {
+        Stack stack = new Stack();
+        int expr = queue.dequeue();
+
+        while(expr == '=') {
+            if(Character.isDigit(expr)) {
+                stack.push(expr);
+            }
+            else {
+                int num1 = stack.pop();
+                int num2 = stack.pop();
+                if(expr == '*'){
+                    stack.push(num1*num2);
+                }
+                else if(expr == '/'){
+                    stack.push(num1/num2);
+                }
+                else if (expr == '+'){
+                    stack.push(num1+num2);
+                }
+                else if (expr == '-'){
+                    stack.push(num1-num2);
+                }
+            }
+            expr = queue.dequeue();
+    }
+        return expr;
 }
 
 class Driver {
     public static void main(String[] args) {
-        System.out.println("Hello, World!");
+        Postfix postfix = new Postfix();
+        Scanner sc = new Scanner(System.in);
+
+        System.out.println("Give me an expression: ");
+        String expression = sc.nextLine();
+        Queue queue = postfix.infToPre(expression);
+
+        System.out.print("Postfix expression: ");
+        queue.display();
+
+        System.out.print("Answer: " + postfix.evaluatePostfix());
     }
 }
